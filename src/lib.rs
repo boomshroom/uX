@@ -71,7 +71,7 @@ macro_rules! define_unsigned {
             pub const MIN: Self = $name(0);
 
             fn mask(self) -> Self {
-                $name(self.0 & ( ((1 as $type) << $bits).overflowing_sub(1).0))
+                $name(self.0 & ( ((1 as $type) << $bits).wrapping_sub(1)))
             }
         }
 
@@ -96,9 +96,9 @@ macro_rules! define_signed {
 
             fn mask(self) -> Self {
                 if ( self.0 & (1<<($bits-1)) ) == 0 {
-                    $name(self.0 & ( ((1 as $type) << $bits).overflowing_sub(1).0))
+                    $name(self.0 & ( ((1 as $type) << $bits).wrapping_sub(1)))
                 } else {
-                    $name(self.0 | !( ((1 as $type) << $bits).overflowing_sub(1).0))
+                    $name(self.0 | !( ((1 as $type) << $bits).wrapping_sub(1)))
                 }
             }
         }
@@ -182,6 +182,76 @@ macro_rules! implement_common {
                 $name(self.0.wrapping_add(rhs.0)).mask()
             }
 
+            /// clear high bits to zero regardless of sign.
+            /// Useful for checking bit representation.
+            fn unsigned_mask(self) -> $type {
+                self.0 & ((1 as $type) << $bits).wrapping_sub(1)
+            }
+
+            /// The number of unused high bits;
+            fn high() -> u32 {
+                 lib::core::mem::size_of::<$type>() as u32 * 8 - $bits
+            }
+
+            /// Count the leading zeroes in the binary representation.
+            /// Does not include bits higher than used.
+            ///
+            /// # Examples
+            ///
+            /// Basic usage:
+            ///
+            /// ```
+            /// use ux::*;
+            ///
+            /// assert_eq!(i7::new(0b0011010).leading_zeros(), 2)
+            pub fn leading_zeros(self) -> u32 {
+                self.unsigned_mask().leading_zeros().saturating_sub(Self::high()).max(0)
+            }
+
+            /// Count the total number of zeroes in the binary representation.
+            /// Does not include bits higher than used.
+            ///
+            /// # Examples
+            ///
+            /// Basic usage:
+            ///
+            /// ```
+            /// use ux::*;
+            ///
+            /// assert_eq!(i7::new(0b0011010).count_zeros(), 4)
+            pub fn count_zeros(self) -> u32 {
+                self.unsigned_mask().count_zeros().saturating_sub(Self::high())
+            }
+
+            /// Count the total number of ones in the binary representation.
+            /// Does not include bits higher than used.
+            ///
+            /// # Examples
+            ///
+            /// Basic usage:
+            ///
+            /// ```
+            /// use ux::*;
+            ///
+            /// assert_eq!(i7::new(0b11101010).count_ones(), 4)
+            pub fn count_ones(self) -> u32 {
+                self.unsigned_mask().count_ones()
+            }
+
+            /// Count the trailing zeroes in the binary representation.
+            /// Does not include bits higher than used.
+            ///
+            /// # Examples
+            ///
+            /// Basic usage:
+            ///
+            /// ```
+            /// use ux::*;
+            ///
+            /// assert_eq!(i7::new(0b0011010).trailing_zeros(), 1)
+            pub fn trailing_zeros(self) -> u32 {
+                self.unsigned_mask().trailing_zeros().min($bits)
+            }
         }
 
 
