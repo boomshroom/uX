@@ -273,74 +273,33 @@ macro_rules! implement_common {
             }
         }
 
-        impl BitOr<$name> for $name {
-            type Output = $name;
-
-            fn bitor(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitor(rhs.mask().0))
+        macro_rules! bit_op {
+            ($tr:ident, $method:ident) => {
+                macro_rules! op {
+                    ($rhs:ty, $lhs:ty) => {
+                        impl $tr<$rhs> for $lhs {
+                            type Output = $name;
+                            fn $method(self, rhs: $rhs) -> Self::Output {
+                                $name((self.mask().0).$method(rhs.mask().0))
+                            }
+                        }
+                    }
+                }
+                op!($name, $name);
+                op!($name, &$name);
+                op!(&$name, $name);
+                op!(&$name, &$name);
             }
         }
 
-        impl<'a> BitOr<&'a $name> for $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitor(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitor(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitOr<$name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitor(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitor(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitOr<&'a $name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitor(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitor(rhs.mask().0))
-            }
-        }
+        bit_op!(BitOr, bitor);
+        bit_op!(BitAnd, bitand);
+        bit_op!(BitXor, bitxor);
 
         impl BitOrAssign<$name> for $name {
             fn bitor_assign(&mut self, other: $name) {
                 *self = self.mask();
                 self.0.bitor_assign(other.mask().0)
-            }
-        }
-
-        impl BitXor<$name> for $name {
-            type Output = $name;
-
-            fn bitxor(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitxor(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitXor<&'a $name> for $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitxor(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitxor(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitXor<$name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitxor(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitxor(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitXor<&'a $name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitxor(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitxor(rhs.mask().0))
             }
         }
 
@@ -364,38 +323,6 @@ macro_rules! implement_common {
 
             fn not(self) -> $name {
                 $name(self.mask().0.not())
-            }
-        }
-
-        impl BitAnd<$name> for $name {
-            type Output = $name;
-
-            fn bitand(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitand(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitAnd<&'a $name> for $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitand(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitand(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitAnd<$name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitand(self, rhs: $name) -> Self::Output {
-                $name(self.mask().0.bitand(rhs.mask().0))
-            }
-        }
-
-        impl<'a> BitAnd<&'a $name> for &'a $name {
-            type Output = <$name as BitOr<$name>>::Output;
-
-            fn bitand(self, rhs: &'a $name) -> Self::Output {
-                $name(self.mask().0.bitand(rhs.mask().0))
             }
         }
 
